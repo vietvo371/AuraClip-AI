@@ -13,6 +13,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Plus, Bell, User, Settings, LogOut } from "lucide-react";
 import Link from "next/link";
 
+/**
+ * Renders the dashboard header with a primary "Tạo Series Mới" button, a notifications button with badge, and a user profile dropdown.
+ *
+ * The profile dropdown displays an avatar (image with text fallback), the user's name and email, links to Profile and Settings, and a destructive "Đăng xuất" item.
+ *
+ * @returns The header element containing the create-button, notification control, and account menu.
+ */
 export function DashboardHeader() {
     return (
         <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6">

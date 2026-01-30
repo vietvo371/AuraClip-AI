@@ -37,6 +37,13 @@ const navItems = [
     },
 ];
 
+/**
+ * Render a fixed, collapsible dashboard sidebar with navigation links and a responsive logo area.
+ *
+ * When expanded the sidebar shows icon + title for each navigation item and a full logo; when collapsed it shows only centered icons and a compact logo. The currently active navigation item is highlighted based on the current pathname, and a toggle button updates the collapsed state with an accessible label.
+ *
+ * @returns The sidebar JSX element
+ */
 export function Sidebar() {
     const pathname = usePathname();
     const [isCollapsed, setIsCollapsed] = useState(false);

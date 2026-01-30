@@ -2,6 +2,11 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play } from "lucide-react";
 
+/**
+ * Render the landing hero section with animated background, headline, CTAs, and social proof.
+ *
+ * @returns A JSX element that renders the complete hero section for the landing page.
+ */
 export function Hero() {
     return (
         <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">

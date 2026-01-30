@@ -2,6 +2,15 @@ import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Video, Layers, TrendingUp, Clock } from "lucide-react";
 
+/**
+ * Renders the dashboard page showing metric cards and a list of recent videos.
+ *
+ * The component builds a responsive stats grid and a "Video gần đây" section from
+ * internal arrays, displaying titles, values, descriptions, icons, trends, and
+ * video metadata (title, series, views, status) with corresponding visual badges.
+ *
+ * @returns A JSX element containing the dashboard layout with stats cards and the recent videos list.
+ */
 export default function DashboardPage() {
     const stats = [
         {

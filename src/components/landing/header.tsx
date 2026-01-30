@@ -6,6 +6,15 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 
+/**
+ * Render the top navigation header with responsive navigation, scroll-aware styling, and a mobile menu.
+ *
+ * The header includes a brand logo linking to the root, desktop navigation links, call-to-action buttons,
+ * and a hamburger-controlled mobile menu that closes when a mobile link is selected. When the page is
+ * scrolled past 20px the header adopts a semi-transparent, blurred background with border and shadow.
+ *
+ * @returns The header as a JSX element
+ */
 export function Header() {
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);

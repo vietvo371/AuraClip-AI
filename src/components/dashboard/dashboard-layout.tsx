@@ -1,0 +1,21 @@
+"use client";
+
+import { ReactNode } from "react";
+import { Sidebar } from "./sidebar";
+import { DashboardHeader } from "./dashboard-header";
+
+interface DashboardLayoutProps {
+    children: ReactNode;
+}
+
+export function DashboardLayout({ children }: DashboardLayoutProps) {
+    return (
+        <div className="min-h-screen bg-background">
+            <Sidebar />
+            <div className="pl-64">
+                <DashboardHeader />
+                <main className="p-6">{children}</main>
+            </div>
+        </div>
+    );
+}

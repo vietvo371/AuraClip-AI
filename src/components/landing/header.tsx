@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useUser } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 
@@ -10,6 +11,7 @@ export function Header() {
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
+    const { isSignedIn, isLoaded } = useUser();
 
     useEffect(() => {
         setMounted(true);
@@ -30,8 +32,8 @@ export function Header() {
     return (
         <header
             className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
-                ? "bg-background/80 backdrop-blur-lg border-b border-border shadow-sm"
-                : "bg-transparent"
+                    ? "bg-background/80 backdrop-blur-lg border-b border-border shadow-sm"
+                    : "bg-transparent"
                 }`}
         >
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -68,14 +70,24 @@ export function Header() {
 
                     {/* CTA Buttons */}
                     <div className="hidden md:flex items-center gap-4">
-                        <Link href="/dashboard">
-                            <Button variant="ghost">Đăng nhập</Button>
-                        </Link>
-                        <Link href="/dashboard">
-                            <Button className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90">
-                                Bắt đầu
-                            </Button>
-                        </Link>
+                        {isLoaded && isSignedIn ? (
+                            <Link href="/dashboard">
+                                <Button className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90">
+                                    Dashboard
+                                </Button>
+                            </Link>
+                        ) : (
+                            <>
+                                <Link href="/sign-in">
+                                    <Button variant="ghost">Đăng nhập</Button>
+                                </Link>
+                                <Link href="/sign-up">
+                                    <Button className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90">
+                                        Đăng ký
+                                    </Button>
+                                </Link>
+                            </>
+                        )}
                     </div>
 
                     {/* Mobile Menu Button */}
@@ -107,16 +119,26 @@ export function Header() {
                                 </Link>
                             ))}
                             <div className="flex flex-col gap-2 pt-4 border-t border-border">
-                                <Link href="/dashboard">
-                                    <Button variant="ghost" className="w-full">
-                                        Đăng nhập
-                                    </Button>
-                                </Link>
-                                <Link href="/dashboard">
-                                    <Button className="w-full bg-gradient-to-r from-primary to-purple-600">
-                                        Bắt đầu
-                                    </Button>
-                                </Link>
+                                {isLoaded && isSignedIn ? (
+                                    <Link href="/dashboard">
+                                        <Button className="w-full bg-gradient-to-r from-primary to-purple-600">
+                                            Dashboard
+                                        </Button>
+                                    </Link>
+                                ) : (
+                                    <>
+                                        <Link href="/sign-in">
+                                            <Button variant="ghost" className="w-full">
+                                                Đăng nhập
+                                            </Button>
+                                        </Link>
+                                        <Link href="/sign-up">
+                                            <Button className="w-full bg-gradient-to-r from-primary to-purple-600">
+                                                Đăng ký
+                                            </Button>
+                                        </Link>
+                                    </>
+                                )}
                             </div>
                         </nav>
                     </div>

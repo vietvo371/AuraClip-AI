@@ -1,5 +1,7 @@
 "use client";
 
+import { useUser, SignOutButton } from "@clerk/nextjs";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
     DropdownMenu,
@@ -14,15 +16,46 @@ import { Plus, Bell, User, Settings, LogOut } from "lucide-react";
 import Link from "next/link";
 
 export function DashboardHeader() {
+    const { user, isLoaded } = useUser();
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    // Prevent hydration mismatch by not rendering user-specific content until mounted
+    if (!mounted || !isLoaded) {
+        return (
+            <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6">
+                <div className="flex flex-1 items-center justify-between">
+                    <div>
+                        <Button className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 shadow-lg shadow-primary/25">
+                            <Plus className="w-4 h-4 mr-2" />
+                            Tạo Series Mới
+                        </Button>
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <Button variant="ghost" size="icon" className="relative">
+                            <Bell className="w-5 h-5" />
+                        </Button>
+                        <div className="h-10 w-10 rounded-full bg-muted animate-pulse" />
+                    </div>
+                </div>
+            </header>
+        );
+    }
+
     return (
         <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6">
             <div className="flex flex-1 items-center justify-between">
                 {/* Left: Create New Series Button */}
                 <div>
-                    <Button className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 shadow-lg shadow-primary/25">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Tạo Series Mới
-                    </Button>
+                    <Link href="/dashboard/create">
+                        <Button className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 shadow-lg shadow-primary/25">
+                            <Plus className="w-4 h-4 mr-2" />
+                            Tạo Series Mới
+                        </Button>
+                    </Link>
                 </div>
 
                 {/* Right: Notifications & Profile */}
@@ -38,9 +71,9 @@ export function DashboardHeader() {
                         <DropdownMenuTrigger asChild>
                             <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                                 <Avatar className="h-10 w-10">
-                                    <AvatarImage src="/avatar-placeholder.jpg" alt="User" />
+                                    <AvatarImage src={user?.imageUrl} alt={user?.fullName || "User"} />
                                     <AvatarFallback className="bg-gradient-to-br from-primary to-purple-500 text-white">
-                                        AC
+                                        {user?.firstName?.charAt(0) || user?.emailAddresses[0]?.emailAddress.charAt(0).toUpperCase() || "U"}
                                     </AvatarFallback>
                                 </Avatar>
                             </Button>
@@ -48,9 +81,11 @@ export function DashboardHeader() {
                         <DropdownMenuContent className="w-56" align="end" forceMount>
                             <DropdownMenuLabel className="font-normal">
                                 <div className="flex flex-col space-y-1">
-                                    <p className="text-sm font-medium leading-none">Người dùng AuraClip</p>
+                                    <p className="text-sm font-medium leading-none">
+                                        {user?.fullName || "Người dùng AuraClip"}
+                                    </p>
                                     <p className="text-xs leading-none text-muted-foreground">
-                                        user@auraclip.ai
+                                        {user?.emailAddresses[0]?.emailAddress}
                                     </p>
                                 </div>
                             </DropdownMenuLabel>
@@ -68,9 +103,13 @@ export function DashboardHeader() {
                                 </Link>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive">
-                                <LogOut className="mr-2 h-4 w-4" />
-                                <span>Đăng xuất</span>
+                            <DropdownMenuItem asChild>
+                                <SignOutButton>
+                                    <button className="w-full flex items-center cursor-pointer text-destructive focus:text-destructive">
+                                        <LogOut className="mr-2 h-4 w-4" />
+                                        <span>Đăng xuất</span>
+                                    </button>
+                                </SignOutButton>
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>

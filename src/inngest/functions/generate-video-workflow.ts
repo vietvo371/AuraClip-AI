@@ -106,57 +106,141 @@ export const generateVideoWorkflow = inngest.createFunction(
         console.log(`Script generated successfully: "${script.title}"`);
         console.log(`Total scenes: ${script.scenes.length}`);
 
-        // Step 2: Generate Images (Future Implementation)
-        // const images = await step.run("generate-images", async () => {
-        //   await supabaseAdmin
-        //     .from("videos")
-        //     .update({ status: "generating_images" })
-        //     .eq("id", videoId);
-        //
-        //   // TODO: Implement image generation using Replicate/Stability AI
-        //   // For each scene.imagePrompt, generate an image
-        //   // Save image URLs to database
-        //
-        //   return imageUrls;
-        // });
+        // Step 2: Generate Voice with Deepgram TTS
+        const { audioUrl, wordTimestamps } = await step.run(
+            "generate-voice",
+            async () => {
+                await supabaseAdmin
+                    .from("videos")
+                    .update({ status: "generating_audio" })
+                    .eq("id", videoId);
 
-        // Step 3: Generate Audio (Future Implementation)
-        // const audio = await step.run("generate-audio", async () => {
-        //   await supabaseAdmin
-        //     .from("videos")
-        //     .update({ status: "generating_audio" })
-        //     .eq("id", videoId);
-        //
-        //   // TODO: Implement audio generation using ElevenLabs/Google TTS
-        //   // Generate voice-over from script.text
-        //   // Mix with background music
-        //   // Save audio URL to database
-        //
-        //   return audioUrl;
-        // });
+                try {
+                    const { generateVoice } = await import(
+                        "../steps/generate-voice"
+                    );
+                    const result = await generateVoice(videoId, script, config);
 
-        // Step 4: Assemble Video (Future Implementation)
-        // const finalVideo = await step.run("assemble-video", async () => {
-        //   await supabaseAdmin
-        //     .from("videos")
-        //     .update({ status: "assembling" })
-        //     .eq("id", videoId);
-        //
-        //   // TODO: Implement video assembly using FFmpeg
-        //   // Combine images, audio, captions
-        //   // Export final video
-        //   // Upload to storage
-        //   // Save video URL to database
-        //
-        //   return videoUrl;
-        // });
+                    // Save audio URL and timestamps
+                    await supabaseAdmin
+                        .from("videos")
+                        .update({
+                            audio_url: result.audioUrl,
+                            word_timestamps: result.wordTimestamps,
+                            status: "generating_captions",
+                        })
+                        .eq("id", videoId);
 
-        // Mark as completed (for now, just script generation)
+                    return result;
+                } catch (error) {
+                    await supabaseAdmin
+                        .from("videos")
+                        .update({
+                            status: "failed",
+                            error_message: `Voice generation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+                        })
+                        .eq("id", videoId);
+
+                    throw error;
+                }
+            }
+        );
+
+        console.log(`Voice generated: ${audioUrl}`);
+
+        // Step 3: Generate Captions
+        const { captionUrl } = await step.run(
+            "generate-captions",
+            async () => {
+                try {
+                    const { generateCaptions } = await import(
+                        "../steps/generate-captions"
+                    );
+                    const result = await generateCaptions(
+                        videoId,
+                        wordTimestamps,
+                        config.captionStyle
+                    );
+
+                    // Save caption URL
+                    if (result.captionUrl) {
+                        await supabaseAdmin
+                            .from("videos")
+                            .update({
+                                caption_url: result.captionUrl,
+                                status: "generating_images",
+                            })
+                            .eq("id", videoId);
+                    } else {
+                        // No captions, skip to images
+                        await supabaseAdmin
+                            .from("videos")
+                            .update({ status: "generating_images" })
+                            .eq("id", videoId);
+                    }
+
+                    return result;
+                } catch (error) {
+                    console.warn("Caption generation failed, continuing:", error);
+                    // Don't fail the whole workflow if captions fail
+                    await supabaseAdmin
+                        .from("videos")
+                        .update({ status: "generating_images" })
+                        .eq("id", videoId);
+
+                    return { captionUrl: "", segments: [] };
+                }
+            }
+        );
+
+        console.log(`Captions generated: ${captionUrl || "skipped"}`);
+
+        // Step 4: Generate Images with Replicate
+        const { imageUrls } = await step.run(
+            "generate-images",
+            async () => {
+                try {
+                    const { generateImages } = await import(
+                        "../steps/generate-images"
+                    );
+                    const result = await generateImages(
+                        videoId,
+                        script.scenes,
+                        config.imageStyle
+                    );
+
+                    // Save image URLs
+                    await supabaseAdmin
+                        .from("videos")
+                        .update({
+                            image_urls: result.imageUrls,
+                            status: "completed", // All assets generated
+                        })
+                        .eq("id", videoId);
+
+                    return result;
+                } catch (error) {
+                    await supabaseAdmin
+                        .from("videos")
+                        .update({
+                            status: "failed",
+                            error_message: `Image generation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+                        })
+                        .eq("id", videoId);
+
+                    throw error;
+                }
+            }
+        );
+
+        console.log(`Images generated: ${imageUrls.length} images`);
+
+        // Mark as completed
         await step.run("mark-completed", async () => {
             await supabaseAdmin
                 .from("videos")
                 .update({
-                    status: "completed", // Will be "generating_images" when next step is implemented
+                    status: "completed",
                 })
                 .eq("id", videoId);
         });
@@ -165,7 +249,10 @@ export const generateVideoWorkflow = inngest.createFunction(
             videoId,
             title: script.title,
             scenesCount: script.scenes.length,
-            status: "Script generated successfully",
+            audioUrl,
+            captionUrl,
+            imageUrls,
+            status: "All assets generated successfully",
         };
     }
 );

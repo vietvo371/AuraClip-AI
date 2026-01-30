@@ -72,3 +72,34 @@ export interface GenerateVideoEvent {
     name: "video/generate.requested";
     data: GenerateVideoConfig;
 }
+
+// Word-level timestamp from Deepgram TTS
+export interface WordTimestamp {
+    word: string;
+    start: number; // seconds
+    end: number; // seconds
+    confidence?: number;
+}
+
+// Caption segment with word-level timing
+export interface CaptionSegment {
+    id: number;
+    start: number; // seconds
+    end: number; // seconds
+    text: string;
+    words: WordTimestamp[];
+}
+
+// Complete caption data
+export interface CaptionData {
+    segments: CaptionSegment[];
+    totalDuration: number;
+}
+
+// Generated assets from workflow
+export interface GeneratedAssets {
+    audioUrl: string;
+    captionUrl: string;
+    imageUrls: string[];
+    wordTimestamps: WordTimestamp[];
+}

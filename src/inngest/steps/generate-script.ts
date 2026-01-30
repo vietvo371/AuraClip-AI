@@ -22,47 +22,70 @@ export async function generateScript(
     try {
         const result = await model.generateContent(prompt);
         const response = result.response;
-        let text = response.text();
+        const rawText = response.text();
 
-        console.log("=== Gemini Raw Response (first 500 chars) ===");
-        console.log(text.substring(0, 500) + "...");
-        console.log("============================================");
+        console.log("=== Gemini Response ===");
+        console.log("Length:", rawText.length, "chars");
+        console.log("First 400:", rawText.substring(0, 400));
+        console.log("Last 200:", rawText.substring(Math.max(0, rawText.length - 200)));
+        console.log("======================");
 
-        // Remove markdown code blocks if present (```json ... ```)
-        text = text.replace(/```json\s*/g, "").replace(/```\s*/g, "");
+        // Clean up markdown code blocks
+        let cleanedText = rawText.trim();
 
-        // Try to find JSON object in the text
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) {
-            console.error("❌ No JSON found in cleaned response");
-            throw new Error("No JSON object found in response");
+        // Remove ```json at start
+        if (cleanedText.startsWith("```json")) {
+            cleanedText = cleanedText.substring(7).trim();
+        } else if (cleanedText.startsWith("```")) {
+            cleanedText = cleanedText.substring(3).trim();
         }
 
-        console.log("✅ Found JSON, attempting to parse...");
+        // Remove ``` at end
+        if (cleanedText.endsWith("```")) {
+            cleanedText = cleanedText.substring(0, cleanedText.length - 3).trim();
+        }
 
+        console.log("✅ Cleaned, length:", cleanedText.length);
+        console.log("First char:", cleanedText[0], "Last char:", cleanedText[cleanedText.length - 1]);
+
+        // Parse JSON
         let script: VideoScript;
 
         try {
-            // Try to parse JSON directly first
-            script = JSON.parse(jsonMatch[0]);
-            console.log("✅ JSON parsed successfully on first try");
+            script = JSON.parse(cleanedText);
+            console.log("✅ Parsed successfully");
         } catch (parseError) {
-            console.warn("⚠️ JSON parse failed, using json-repair...");
+            console.warn("⚠️ Parse failed, trying json-repair...");
 
             try {
-                // Use json-repair library to fix malformed JSON
-                const repairedJson = jsonrepair(jsonMatch[0]);
+                const repairedJson = jsonrepair(cleanedText);
                 script = JSON.parse(repairedJson);
-                console.log("✅ JSON repaired and parsed successfully");
+                console.log("✅ Repaired and parsed");
             } catch (repairError) {
-                console.error("❌ JSON repair failed");
+                console.error("❌ Repair failed");
                 console.error("Parse error:", parseError);
                 console.error("Repair error:", repairError);
-                console.error("Problematic JSON (first 1000 chars):");
-                console.error(jsonMatch[0].substring(0, 1000));
+                console.error("Cleaned text:", cleanedText);
                 throw parseError;
             }
         }
+
+        // Log parsed script
+        console.log("📋 Parsed script structure:");
+        console.log("- Title:", script.title);
+        console.log("- Hook:", script.hook?.substring(0, 50));
+        console.log("- Scenes count:", script.scenes?.length || 0);
+        if (script.scenes && script.scenes.length > 0) {
+            script.scenes.forEach((scene, i) => {
+                console.log(`  Scene ${i}:`, {
+                    sceneNumber: scene.sceneNumber,
+                    hasText: !!scene.text,
+                    hasImagePrompt: !!scene.imagePrompt,
+                    hasDuration: !!scene.duration,
+                });
+            });
+        }
+        console.log("- Conclusion:", script.conclusion?.substring(0, 50) || "missing");
 
         // Validate the response
         validateScript(script);
@@ -202,8 +225,10 @@ function validateScript(script: VideoScript): void {
         throw new Error("Invalid script: missing or invalid hook");
     }
 
+    // Conclusion is optional, provide default if missing
     if (!script.conclusion || typeof script.conclusion !== "string") {
-        throw new Error("Invalid script: missing or invalid conclusion");
+        console.warn("⚠️ Conclusion missing, using default");
+        script.conclusion = "Thanks for watching! Like and follow for more!";
     }
 
     if (!Array.isArray(script.scenes) || script.scenes.length === 0) {

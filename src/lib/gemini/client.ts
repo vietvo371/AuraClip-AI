@@ -20,7 +20,7 @@ export function getGeminiModel() {
             temperature: 0.9,
             topP: 0.95,
             topK: 64,
-            maxOutputTokens: 2048,
+            maxOutputTokens: 8192, // Increased to prevent truncation
         },
     });
 }

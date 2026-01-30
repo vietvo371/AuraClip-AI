@@ -47,6 +47,14 @@ const features = [
     },
 ];
 
+/**
+ * Renders the "Features" section containing a header and a responsive grid of feature cards.
+ *
+ * Each card displays an icon, title, and description, uses a staggered entrance animation, and
+ * applies hover effects including a border/shadow change and a gradient overlay.
+ *
+ * @returns The React element for the features section containing the header and responsive grid of cards.
+ */
 export function Features() {
     return (
         <section id="features" className="py-20 md:py-32 relative">

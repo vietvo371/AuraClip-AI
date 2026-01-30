@@ -17,6 +17,15 @@ export const metadata: Metadata = {
   description: "Tạo video chuyên nghiệp với AI trong vài phút. AI Script tự động, lên lịch đăng bài, và phân tích hiệu suất - tất cả trong một nền tảng.",
 };
 
+/**
+ * Root layout component that renders the top-level HTML structure for the app.
+ *
+ * Renders an <html> element with Vietnamese language and hydration warning suppressed, and a <body>
+ * that applies the Geist font CSS variables and `antialiased` class before rendering `children`.
+ *
+ * @param children - The content to render inside the document body (application pages/components).
+ * @returns The root HTML and body elements containing the provided children.
+ */
 export default function RootLayout({
   children,
 }: Readonly<{

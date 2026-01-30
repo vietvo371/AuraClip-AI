@@ -36,6 +36,15 @@ const socialLinks = [
     { icon: Youtube, href: "#", label: "YouTube" },
 ];
 
+/**
+ * Renders the landing-page footer with brand, social icons, navigation groups, and a bottom bar.
+ *
+ * The footer includes a brand block (logo, name, short description, social links), four link groups
+ * ("Sản phẩm", "Công ty", "Tài nguyên", "Pháp lý") populated from data arrays, and a bottom bar with
+ * the current year copyright and a short technology note.
+ *
+ * @returns The footer JSX element containing brand information, social icons, navigation links, and the bottom bar.
+ */
 export function Footer() {
     return (
         <footer className="border-t border-border bg-muted/30">
